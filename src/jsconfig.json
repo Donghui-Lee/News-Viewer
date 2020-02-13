@@ -1,0 +1,9 @@
+/**
+ * VS Code 파일 자동 불러오기 기능
+ */
+
+{
+    "compilerOptions": {
+        "target": "es6"
+    }
+}
