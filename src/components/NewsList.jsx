@@ -2,10 +2,11 @@
  * API 요청 및 뉴스 데이터가 들어 있는 배열을 컴포넌트 배열로 변환하여 렌더링해 주는 컴포넌트
  */ 
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import NewsItem from './NewsItem';
 import axios from 'axios';
+import usePromise from '../lib/usePromise';
 
 
 const NewsListBlock = styled.div`
@@ -21,33 +22,10 @@ const NewsListBlock = styled.div`
     }
 `;
 
-const sampleArticle = {
-    title: '제목',
-    description: '내용',
-    url: 'https://google.com',
-    urlToImage: 'https://via.placeholder.com/160'
-};
-
 const NewsList = ({ category }) => {
-    const [articles, setArticles] = useState(null);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        // async 를 사용하는 함수 따로 선언
-        const fetchData = async () => {
-            setLoading(true);
-
-            try {
-                const query = category === 'all' ? '' : `&category=${category}`;
-                const response = await axios.get(`https://newsapi.org/v2/top-headlines?country=kr${query}&apiKey=25981a230a9049aebdb8dc79e277454a`,);
-                setArticles(response.data.articles);
-            } catch (e) {
-                console.log(e);
-            } 
-            setLoading(false);
-        };
-
-        fetchData();
+    const [loading, response, error] = usePromise(() => {
+        const query = category === 'all' ? '' : `&category=${category}`;
+        return axios.get(`https://newsapi.org/v2/top-headlines?country=kr${query}&apiKey=25981a230a9049aebdb8dc79e277454a`,);
     }, [category]);
 
     // 대기 중
@@ -55,12 +33,18 @@ const NewsList = ({ category }) => {
         return <NewsListBlock>대기중 ...</NewsListBlock>;
     }
 
-    // 아직 articles 값이 설정되지 않았을 경우
-    if(!articles) {
+    // 아직 response 값이 설정되지 않았을 경우
+    if(!response) {
         return null;
     }
 
-    // article 데이터가 유효할 경우
+    // 에러가 발생할 경우
+    if(error) {
+        return <NewsListBlock>에러 발생</NewsListBlock>
+    }
+
+    // response 데이터가 유효할 경우
+    const { articles } = response.data;
     return (
         <NewsListBlock>
             {articles.map(article => (
